@@ -1,0 +1,129 @@
+services:
+
+  traefik:
+    image: traefik:v3.7
+    container_name: homelaber-traefik
+    restart: unless-stopped
+    env_file: ./env/traefik.env
+    command:
+      - "--api.dashboard=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.network=proxy"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certresolver=cloudflare"
+      - "--entrypoints.websecure.http.tls.domains[0].main=${DOMAIN}"
+      - "--entrypoints.websecure.http.tls.domains[0].sans=*.${DOMAIN}"
+      - "--certificatesresolvers.cloudflare.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.cloudflare.acme.storage=/acme/acme.json"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      # Décommente pour les premiers essais, puis supprime data/traefik/acme.json
+      # - "--certificatesresolvers.cloudflare.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/traefik:/acme
+    networks:
+      - proxy
+
+  lldap:
+    image: lldap/lldap:stable
+    container_name: homelaber-lldap
+    restart: unless-stopped
+    env_file: ./env/lldap.env
+    volumes:
+      - ./data/ldap:/data
+    networks:
+      - auth
+      - proxy
+    healthcheck:
+      test: ["CMD", "/app/lldap", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.lldap.rule: "Host(`ldap.${DOMAIN}`)"
+      traefik.http.routers.lldap.entrypoints: "websecure"
+      traefik.http.routers.lldap.middlewares: "tinyauth@docker"
+      traefik.http.services.lldap.loadbalancer.server.port: "17170"
+
+  # Provisionne bind_ro et le groupe registry dans lldap au déploiement.
+  # Ne démarre pas avec `docker compose up` (profil dédié) — lancé par setup.sh
+  # via `docker compose run --rm lldap-bootstrap`. Idempotent.
+  lldap-bootstrap:
+    image: lldap/lldap:stable
+    container_name: homelaber-lldap-bootstrap
+    profiles: ["bootstrap"]
+    entrypoint: ["/app/bootstrap.sh"]
+    depends_on:
+      lldap:
+        condition: service_healthy
+    environment:
+      LLDAP_URL: "http://lldap:17170"
+      LLDAP_ADMIN_USERNAME: "admin"
+      LLDAP_ADMIN_PASSWORD: "${LLDAP_ADMIN_PASSWORD}"
+      USER_CONFIGS_DIR: /bootstrap/user-configs
+      GROUP_CONFIGS_DIR: /bootstrap/group-configs
+      DO_CLEANUP: "false"
+    volumes:
+      - ./bootstrap:/bootstrap:ro
+    networks:
+      - auth
+
+  tinyauth:
+    image: ghcr.io/tinyauthapp/tinyauth:v5
+    container_name: homelaber-tinyauth
+    restart: unless-stopped
+    env_file: ./env/tinyauth.env
+    depends_on:
+      lldap:
+        condition: service_healthy
+    volumes:
+      - ./data/tinyauth:/data
+    networks:
+      - auth
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.tinyauth.rule: "Host(`auth.${DOMAIN}`)"
+      traefik.http.routers.tinyauth.entrypoints: "websecure"
+      traefik.http.services.tinyauth.loadbalancer.server.port: "3000"
+      traefik.http.middlewares.tinyauth.forwardauth.address: "http://tinyauth:3000/api/auth/traefik"
+      traefik.http.middlewares.tinyauth.forwardauth.authResponseHeaders: "Remote-User,Remote-Name,Remote-Email,Remote-Groups"
+
+  registry:
+    image: ghcr.io/project-zot/zot:v2.1.20
+    container_name: homelaber-zot
+    restart: unless-stopped
+    depends_on:
+      lldap:
+        condition: service_healthy
+    volumes:
+      - ./data/zot/data:/var/lib/registry
+      - ./config/zot/config.json:/etc/zot/config.json:ro
+      - ./config/zot/ldap-credentials.json:/etc/zot/ldap-credentials.json:ro
+    networks:
+      - auth
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.registry.rule: "Host(`registry.${DOMAIN}`)"
+      traefik.http.routers.registry.entrypoints: "websecure"
+      traefik.http.services.registry.loadbalancer.server.port: "5000"
+
+networks:
+  proxy:
+    name: proxy
+  auth:
+    name: auth

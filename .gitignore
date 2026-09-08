@@ -1,0 +1,10 @@
+.claude
+.tokensave
+secrets.env
+.env
+env/
+config/
+bootstrap/
+data/
+roadmap.txt
+projet.txt

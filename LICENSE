@@ -1,0 +1,26 @@
+Copyright (c) 2026 Johann Parola. Tous droits réservés.
+All rights reserved.
+
+Ce logiciel, son code source, sa configuration et sa documentation sont la
+propriété exclusive de leur auteur.
+
+Aucune autorisation n'est accordée, expressément ou implicitement, de copier,
+modifier, fusionner, publier, distribuer, sous-licencier, vendre, héberger,
+exécuter ou utiliser tout ou partie de ce logiciel, sous quelque forme que ce
+soit, sans accord écrit préalable de l'auteur.
+
+Aucune licence open source n'est accordée à ce stade. L'auteur se réserve le
+droit de publier ultérieurement tout ou partie de ce code sous la licence de son
+choix ; une telle publication ne vaudra que pour les versions explicitement
+désignées par lui.
+
+Les composants tiers déployés par ce projet — notamment Traefik, lldap,
+tinyauth, zot et Docker — ne sont pas couverts par le présent texte et restent
+régis par leurs licences respectives.
+
+CE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU
+IMPLICITE, Y COMPRIS SANS S'Y LIMITER LES GARANTIES DE QUALITÉ MARCHANDE,
+D'ADÉQUATION À UN USAGE PARTICULIER ET D'ABSENCE DE CONTREFAÇON. EN AUCUN CAS
+L'AUTEUR NE POURRA ÊTRE TENU RESPONSABLE D'UNE QUELCONQUE RÉCLAMATION, D'UN
+DOMMAGE OU D'UNE AUTRE RESPONSABILITÉ, CONTRACTUELLE, DÉLICTUELLE OU AUTRE,
+DÉCOULANT DU LOGICIEL, DE SON UTILISATION OU DE TOUTE AUTRE INTERACTION AVEC LUI.

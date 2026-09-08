@@ -4,6 +4,17 @@ Stack self-hosted : reverse proxy Traefik, annuaire LDAP (lldap), SSO (tinyauth)
 et registre d'images OCI privé (zot). Tout est publié en HTTPS via Cloudflare
 DNS challenge.
 
+## Licence
+
+**Source-available, tous droits réservés** — voir [LICENSE](LICENSE).
+
+Ce dépôt est public pour être lu, pas pour être utilisé. Aucun droit de copie,
+de modification, de déploiement ni d'hébergement n'est accordé. Le choix d'une
+éventuelle licence ouverte est reporté à plus tard.
+
+Les instructions ci-dessous documentent le déploiement pour l'auteur et les
+personnes qu'il autorise expressément. Pour tout autre usage, demande d'abord.
+
 ## Prérequis
 
 - Docker Engine + plugin `docker compose`

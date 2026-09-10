@@ -122,6 +122,29 @@ services:
       traefik.http.routers.registry.entrypoints: "websecure"
       traefik.http.services.registry.loadbalancer.server.port: "5000"
 
+  homelaber:
+    image: homelaber:v0
+    container_name: homelaber
+    restart: unless-stopped
+    depends_on:
+      lldap:
+        condition: service_healthy
+      tinyauth:
+        condition: service_started
+      registry:
+        condition: service_started
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/homelaber:/srv/homelaber
+    networks:
+      - auth
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.homelaber.rule: "Host(`panel.${DOMAIN}`)"
+      traefik.http.routers.homelaber.entrypoints: "websecure"
+      traefik.http.services.homelaber.loadbalancer.server.port: "1919"
+
 networks:
   proxy:
     name: proxy

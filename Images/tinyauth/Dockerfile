@@ -1,0 +1,1 @@
+FROM ghcr.io/tinyauthapp/tinyauth:v5

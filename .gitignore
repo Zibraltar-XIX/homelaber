@@ -1,10 +1,9 @@
 .claude
 .tokensave
+.idea
 secrets.env
 .env
 env/
 config/
 bootstrap/
 data/
-roadmap.txt
-projet.txt

@@ -1,0 +1,1 @@
+FROM ghcr.io/project-zot/zot:v2.1.20
